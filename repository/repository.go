@@ -38,6 +38,11 @@ var validRefExprs = map[string]*regexp.Regexp{
 
 const defaultRegistry = "registry.hub.docker.com"
 
+var defaultRegistryMap = map[string]bool {
+	"registry.hub.docker.com": true,
+	"docker.io": true,
+ }
+
 // Repository is a parsed, valid Docker repository reference
 type Repository struct {
 	ref      string
@@ -61,7 +66,7 @@ func (r *Repository) Registry() string {
 
 // IsDefaultRegistry tells us if we use default registry (DockerHub)
 func (r *Repository) IsDefaultRegistry() bool {
-	return r.registry == defaultRegistry
+	return defaultRegistryMap[r.registry]
 }
 
 // Full gives us repository in a "full" form REGISTRY[:PORT]/REPOSITORY
@@ -219,15 +224,19 @@ func GetRegistry(ref string) string {
 
 	registry := strings.Split(ref, "/")[0]
 
-	if isHostname(registry) {
+	if defaultRegistryMap[registry] {
+		return defaultRegistry
+	} else if isHostname(registry) {
 		return registry
 	}
-
 	return defaultRegistry
 }
 
 func getFullRef(ref, registry string) string {
 	if strings.HasPrefix(ref, registry) {
+		return ref
+	}
+	if defaultRegistryMap[registry] {
 		return ref
 	}
 
